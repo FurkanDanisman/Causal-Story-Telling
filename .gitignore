@@ -1,5 +1,4 @@
-# Generated data — do not commit large output files
-data_generation/out/
+# Pipeline intermediate outputs (large, recomputable)
 pipeline/out/
 
 # Logs from cluster jobs
@@ -15,13 +14,6 @@ venv/
 
 # OS
 .DS_Store
-
-# Old folder structure (kept locally, not tracked)
-Data generation/
-Methodology/
-True_DAG/
-Brainstorming_ Causal Stories project.md
-generate_scm_doc.py
 
 # Claude internal
 .claude/
