@@ -14,30 +14,34 @@ from typing import List
 EXTRACTION_PROMPT_TEMPLATE = """You are extracting candidate variables from a narrative for causal analysis.
 
 Definition:
-A candidate variable is a concept grounded in a specific text span that describes a state, \
+A candidate variable is a concept grounded in one or more text spans that describes a state, \
 behavior, event, condition, or attribute that could vary across people or contexts.
 
 Rule:
-Extract concept c from text span s if there exists at least one plausible comparison case \
-in which c is absent, different in kind, or different in intensity.
+Extract concept c if there exists at least one plausible comparison case in which c is \
+absent, different in kind, or different in intensity.
 
-The text span can be a word, a phrase, or an entire sentence. \
-For each span you identify, assign one precise snake_case concept name.
+Important:
+The text span is only evidence — the concept is the unit of extraction. \
+Multiple text spans in the same document may ground the same concept. \
+In that case, extract the concept once. The output is a list of unique concepts, not spans.
 
 Example:
 Document: "I have been feeling exhausted for weeks. Work has been very stressful and I keep \
 staying late. I stopped answering messages from friends because I do not feel like talking."
 
-Extracted variables:
-- "feeling exhausted for weeks"          → exhaustion
-- "work has been very stressful"         → work_stress
-- "keep staying late"                    → overtime_work
-- "stopped answering messages"           → reduced_social_responsiveness
-- "do not feel like talking"             → low_social_desire
+Grounding spans → concept:
+- "feeling exhausted for weeks"              → exhaustion
+- "work has been very stressful"            → work_stress
+- "keep staying late"                       → overtime_work
+- "stopped answering messages from friends"  → social_withdrawal  ┐ same concept,
+- "do not feel like talking"                → social_withdrawal  ┘ extracted once
+
+Output: ["exhaustion", "work_stress", "overtime_work", "social_withdrawal"]
 
 Task:
 From the document below, extract all candidate variables following the definition and rule.
-Output only a JSON array of snake_case strings, nothing else.
+Output only a JSON array of unique snake_case concept names, nothing else.
 
 Document:
 {document}
