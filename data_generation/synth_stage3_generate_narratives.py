@@ -63,6 +63,48 @@ VAR_DESCRIPTIONS = {
     "rumination":            "rumination (repetitively dwelling on the same negative thoughts)",
 }
 
+VAR_PROXIES = {
+    "early_adversity": (
+        '    early_adversity       → Examples: "my childhood was really unstable and difficult"\n'
+        '                                   "growing up was traumatic — there was a lot of chaos at home"\n'
+        '                                   "I had a really hard and unstable upbringing"\n'
+        '                            Must clearly signal: difficult childhood. Not just "things were hard".\n'
+        '                            DON\'T say "early adversity".'
+    ),
+    "chronic_stress": (
+        '    chronic_stress        → Examples: "I\'ve been under constant stress — work, money, all of it"\n'
+        '                                   "the pressure has been relentless and it never lets up"\n'
+        '                            Must clearly signal: ongoing, persistent stress. Not just "I\'m tired".\n'
+        '                            "stress" is natural — use it directly.'
+    ),
+    "emotion_dysregulation": (
+        '    emotion_dysregulation → Examples: "I can\'t control my emotions when it gets bad"\n'
+        '                                   "my emotions are completely all over the place"\n'
+        '                                   "I break down and can\'t pull myself together emotionally"\n'
+        '                            Must clearly signal: inability to regulate emotions. Not just "I feel things".\n'
+        '                            DON\'T say "emotion dysregulation".'
+    ),
+    "social_withdrawal": (
+        '    social_withdrawal     → Examples: "I\'ve been pulling away from everyone and isolating myself"\n'
+        '                                   "I stopped reaching out — I cut people off and go quiet"\n'
+        '                                   "I\'ve been isolating, cancelling everything, seeing no one"\n'
+        '                            Must clearly signal: deliberate social isolation. Not just "I\'m busy".\n'
+        '                            DON\'T say "social withdrawal".'
+    ),
+    "rumination": (
+        '    rumination            → Examples: "I can\'t stop going over the same thoughts again and again"\n'
+        '                                   "my mind keeps repeating the same mistakes and conversations"\n'
+        '                                   "I keep replaying everything endlessly and can\'t shut it off"\n'
+        '                            Must clearly signal: repetitive stuck thinking. Not just "I worry".\n'
+        '                            DON\'T say "I am ruminating".'
+    ),
+    "depression": (
+        '    depression            → "I feel depressed" / "I\'ve been depressed" / "I am depressed"\n'
+        '                            Use directly and explicitly if Depressed=YES.\n'
+        '                            DON\'T say "depressed" in any form if Depressed=NO.'
+    ),
+}
+
 # All directed edges in the ground truth DAG
 GROUND_TRUTH_EDGES = [
     ("early_adversity",       "chronic_stress"),
@@ -103,11 +145,17 @@ def build_prompt(record: dict) -> str:
         f"- Noise (mention briefly, unrelated to struggles): {', '.join(noise)}\n" if noise else ""
     )
 
+    proxy_vars = list(active) + (["depression"] if y == 1 else [])
+    active_proxies = "\n\n".join(
+        VAR_PROXIES[v] for v in proxy_vars if v in VAR_PROXIES
+    )
+
     return PROMPT_TEMPLATE.format(
         active_dag_variables=active_desc,
         depression_label="YES" if y == 1 else "NO",
         noise_line=noise_line,
         active_edges=_active_edges(active, y),
+        active_proxies=active_proxies,
     )
 
 

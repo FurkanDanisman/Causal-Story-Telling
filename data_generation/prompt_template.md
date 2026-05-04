@@ -25,43 +25,12 @@ Use phrases like "when X happens, I find myself Y-ing", "ever since X, I notice 
 "X tends to leave me with Y" to suggest direction without stating it explicitly.
 
 WHAT THE NARRATIVE MUST CONTAIN
-Each core experience must appear ONCE as a single clear, dedicated expression —
-specific enough that anyone reading it could unambiguously identify the concept.
+Each core experience must appear at least ONCE as a single clear, dedicated expression —
+specific enough that anyone reading it could unambiguously identify the concept without breaking the causal direction.
 Do not scatter vague references throughout — one precise expression per concept.
 
-Required proxies per variable:
-    early_adversity       → ONE of: "my childhood was really unstable and difficult"
-                                   "growing up was traumatic — there was a lot of chaos at home"
-                                   "I had a really hard and unstable upbringing"
-                            Must clearly signal: difficult childhood. Not just "things were hard".
-                            DON'T say "early adversity".
-
-    chronic_stress        → ONE of: "I've been under constant stress — work, money, all of it"
-                                   "the pressure has been relentless and it never lets up"
-                            Must clearly signal: ongoing, persistent stress. Not just "I'm tired".
-                            "stress" is natural — use it directly.
-
-    emotion_dysregulation → ONE of: "I can't control my emotions when it gets bad"
-                                   "my emotions are completely all over the place"
-                                   "I break down and can't pull myself together emotionally"
-                            Must clearly signal: inability to regulate emotions. Not just "I feel things".
-                            DON'T say "emotion dysregulation".
-
-    social_withdrawal     → ONE of: "I've been pulling away from everyone and isolating myself"
-                                   "I stopped reaching out — I cut people off and go quiet"
-                                   "I've been isolating, cancelling everything, seeing no one"
-                            Must clearly signal: deliberate social isolation. Not just "I'm busy".
-                            DON'T say "social withdrawal".
-
-    rumination            → ONE of: "I can't stop going over the same thoughts again and again"
-                                   "my mind keeps looping on the same mistakes and conversations"
-                                   "I keep replaying everything endlessly and can't shut it off"
-                            Must clearly signal: repetitive stuck thinking. Not just "I worry".
-                            DON'T say "I am ruminating".
-
-    depression            → "I feel depressed" / "I've been depressed" / "I am depressed"
-                            Use directly and explicitly if Depressed=YES.
-                            DON'T say "depressed" in any form if Depressed=NO.
+Required proxies for this patient's active experiences:
+{active_proxies}
 
 - Noise variables appear in one sentence only, briefly, and feel unrelated to core struggles.
 
