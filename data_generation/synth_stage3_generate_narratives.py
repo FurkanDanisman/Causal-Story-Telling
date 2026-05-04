@@ -37,33 +37,33 @@ from typing import List, Optional
 
 # ── Prompt construction ────────────────────────────────────────────────────────
 
+VAR_DESCRIPTIONS = {
+    "early_adversity":       "early_adversity (difficult or traumatic childhood experiences)",
+    "chronic_stress":        "chronic_stress (persistent stress from work, finances, or relationships)",
+    "emotion_dysregulation": "emotion_dysregulation (difficulty controlling or regulating emotions)",
+    "social_withdrawal":     "social_withdrawal (pulling away from friends and social life)",
+    "rumination":            "rumination (repetitively dwelling on the same negative thoughts)",
+}
+
 PROMPT_TEMPLATE = """\
-You are generating a realistic therapy session transcript for a causal inference \
-research study on mental health.
+Write a first-person therapy session monologue for the following patient. \
+Output ONLY the monologue between <transcript> and </transcript> tags — nothing else.
 
 Patient profile:
-- Relevant experiences: {active_dag_variables}
-- Depression: {depression_label}
+- Active experiences: {active_dag_variables}
+- Depressed: {depression_label}
 {noise_line}
-Write a first-person monologue of approximately 200 words, as if the patient is \
-speaking to their therapist during a session.
+Requirements:
+- 150-200 words, patient speaking directly to their therapist
+- Every active experience must be clearly named or unmistakably described in the narrative \
+(e.g. "rumination" → the patient says "I keep ruminating" or "I can't stop ruminating")
+- If Depressed=YES: patient must explicitly say they feel depressed or have been feeling depressed
+- If Depressed=NO: patient must not mention feeling depressed — stress and difficulties are fine
+- Noise variables appear briefly and feel unrelated to the patient's core struggles
+- Do not state explicit causal links ("X caused Y" or "because of X, I feel Y")
+- Output nothing outside the tags
 
-Rules:
-- Do not use clinical or technical language — express everything through personal \
-experiences, feelings, and daily life events
-- Do not state causal relationships explicitly (avoid "X caused Y" or "because of \
-X, I feel Y")
-- If depression is YES, the patient must clearly state in their own words that they \
-have been feeling depressed or persistently low — as a single unified experience, \
-not a list of separate symptoms
-- If depression is NO, the patient must not describe feeling depressed or \
-persistently low — difficulties and stress may be present but the patient is coping
-- Noise variables should appear naturally and briefly, feeling unrelated to the \
-patient's core emotional struggles
-- Write only the patient's words — no therapist dialogue, no labels, no headings
-
-Transcript:
-"""
+<transcript>"""
 
 
 def build_prompt(record: dict) -> str:
@@ -71,15 +71,33 @@ def build_prompt(record: dict) -> str:
     noise  = record["noise_variables"]
     y      = record["response_value"]
 
+    active_desc = ", ".join(
+        VAR_DESCRIPTIONS.get(v, v) for v in active
+    ) if active else "none"
+
     noise_line = (
         f"- Also mentions: {', '.join(noise)}\n" if noise else ""
     )
 
     return PROMPT_TEMPLATE.format(
-        active_dag_variables=", ".join(active) if active else "none",
+        active_dag_variables=active_desc,
         depression_label="YES" if y == 1 else "NO",
         noise_line=noise_line,
     )
+
+
+# ── Transcript extraction ─────────────────────────────────────────────────────
+
+def _extract_transcript(raw: str) -> str:
+    """Pull content between <transcript> and </transcript>. If closing tag is
+    missing (model stopped early), return everything after the opening tag."""
+    start = raw.find("<transcript>")
+    if start != -1:
+        raw = raw[start + len("<transcript>"):]
+    end = raw.find("</transcript>")
+    if end != -1:
+        raw = raw[:end]
+    return raw.strip()
 
 
 # ── HuggingFace generator ──────────────────────────────────────────────────────
@@ -119,10 +137,13 @@ class HFGenerator:
         temperature: float,
     ) -> str:
         torch = self.torch
+        messages = [{"role": "user", "content": prompt}]
+        formatted = self.tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
         inputs = self.tokenizer(
-            prompt,
+            formatted,
             return_tensors="pt",
-            add_special_tokens=False,
         ).to(self.device)
 
         with torch.no_grad():
@@ -137,9 +158,9 @@ class HFGenerator:
                 pad_token_id=self.tokenizer.pad_token_id,
             )
 
-        # Return only the newly generated tokens
         gen_ids = output[0][inputs["input_ids"].shape[1]:]
-        return self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
+        raw = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
+        return _extract_transcript(raw)
 
 
 # ── Checkpointing ──────────────────────────────────────────────────────────────

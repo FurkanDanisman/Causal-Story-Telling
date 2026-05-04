@@ -115,6 +115,7 @@ def main() -> None:
         variable_set.update(rec["candidates"])
     vars_sorted = sorted(variable_set)
 
+    write_expanded = args.expanded_doc_edge_out_csv is not None
     expanded_rows = []
     dataset_rows = []
 
@@ -126,15 +127,16 @@ def main() -> None:
             for doc_id in doc_ids:
                 p = doc_edges.get((doc_id, source, target), 0.0)
                 p_dataset += weights[doc_id] * p
-                expanded_rows.append(
-                    {
-                        "doc_id": doc_id,
-                        "source": source,
-                        "target": target,
-                        "p_edge": f"{p:.6f}",
-                        "weight": f"{weights[doc_id]:.6f}",
-                    }
-                )
+                if write_expanded:
+                    expanded_rows.append(
+                        {
+                            "doc_id": doc_id,
+                            "source": source,
+                            "target": target,
+                            "p_edge": f"{p:.6f}",
+                            "weight": f"{weights[doc_id]:.6f}",
+                        }
+                    )
             dataset_rows.append(
                 {
                     "source": source,

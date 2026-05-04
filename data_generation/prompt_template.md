@@ -3,122 +3,127 @@
 ## Purpose
 
 This template is filled once per sampled document and sent to the LLM to generate
-a synthetic therapy session transcript. The active DAG variables and noise variables
-come from the Stage 1+2 SCM sampler. The LLM's only job is to wrap them in
-realistic, implicit, first-person speech.
+a synthetic therapy session transcript. Active DAG variables are expanded with their
+descriptions so the model knows exactly what concept to express. The output is
+extracted from between `<transcript>` and `</transcript>` tags — no post-processing needed.
+
+---
+
+## Variable Descriptions (injected into prompt)
+
+| Variable | Description shown to model |
+|---|---|
+| `early_adversity` | early_adversity (difficult or traumatic childhood experiences) |
+| `chronic_stress` | chronic_stress (persistent stress from work, finances, or relationships) |
+| `emotion_dysregulation` | emotion_dysregulation (difficulty controlling or regulating emotions) |
+| `social_withdrawal` | social_withdrawal (pulling away from friends and social life) |
+| `rumination` | rumination (repetitively dwelling on the same negative thoughts) |
+
+`depression` is passed as the label (YES/NO), not as an active experience.
 
 ---
 
 ## Template
 
 ```
-You are generating a realistic therapy session transcript for a causal inference
-research study on mental health.
+Write a first-person therapy session monologue for the following patient.
+Output ONLY the monologue between <transcript> and </transcript> tags — nothing else.
 
 Patient profile:
-- Relevant experiences: {active_dag_variables}
-- Depression: {YES or NO}
+- Active experiences: {active_dag_variables_with_descriptions}
+- Depressed: {YES or NO}
 {- Also mentions: {noise_variables}}
 
-Write a first-person monologue of approximately 200 words, as if the patient is
-speaking to their therapist during a session.
+Requirements:
+- 150-200 words, patient speaking directly to their therapist
+- Every active experience must be clearly named or unmistakably described in the narrative
+  (e.g. "rumination" → the patient says "I keep ruminating" or "I can't stop ruminating")
+- If Depressed=YES: patient must explicitly say they feel depressed or have been feeling depressed
+- If Depressed=NO: patient must not mention feeling depressed — stress and difficulties are fine
+- Noise variables appear briefly and feel unrelated to the patient's core struggles
+- Do not state explicit causal links ("X caused Y" or "because of X, I feel Y")
+- Output nothing outside the tags
 
-Rules:
-- Do not use clinical or technical language — express everything through personal
-  experiences, feelings, and daily life events
-- Do not state causal relationships explicitly (avoid "X caused Y" or "because of
-  X, I feel Y")
-- If depression is YES, the patient must clearly state in their own words that they
-  have been feeling depressed or persistently low — as a single unified experience,
-  not a list of separate symptoms
-- If depression is NO, the patient must not describe feeling depressed or
-  persistently low — difficulties and stress may be present but the patient is coping
-- Noise variables should appear naturally and briefly, feeling unrelated to the
-  patient's core emotional struggles
-- Write only the patient's words — no therapist dialogue, no labels, no headings
-
-Transcript:
+<transcript>
 ```
 
-The line `{- Also mentions: {noise_variables}}` is included only when noise
-variables are non-empty. When there are no noise variables, that line is omitted
-entirely.
+The `{- Also mentions: {noise_variables}}` line is included only when noise variables are non-empty.
 
 ---
 
 ## Example — Y = 1
 
-**Input vector:**
-- active_dag_variables: early_adversity, chronic_stress, emotion_dysregulation,
-  social_withdrawal, rumination
+**Input:**
+- active_dag_variables: early_adversity, chronic_stress, social_withdrawal, rumination
 - noise_variables: travel, diet_change
-- depression: YES
+- response_value: 1
 
 **Filled prompt:**
 ```
-You are generating a realistic therapy session transcript for a causal inference
-research study on mental health.
+Write a first-person therapy session monologue for the following patient.
+Output ONLY the monologue between <transcript> and </transcript> tags — nothing else.
 
 Patient profile:
-- Relevant experiences: early_adversity, chronic_stress, emotion_dysregulation,
-  social_withdrawal, rumination
-- Depression: YES
+- Active experiences: early_adversity (difficult or traumatic childhood experiences),
+  chronic_stress (persistent stress from work, finances, or relationships),
+  social_withdrawal (pulling away from friends and social life),
+  rumination (repetitively dwelling on the same negative thoughts)
+- Depressed: YES
 - Also mentions: travel, diet_change
 
-Write a first-person monologue of approximately 200 words, as if the patient is
-speaking to their therapist during a session.
+Requirements:
+- 150-200 words, patient speaking directly to their therapist
+- Every active experience must be clearly named or unmistakably described in the narrative
+- If Depressed=YES: patient must explicitly say they feel depressed or have been feeling depressed
+- If Depressed=NO: patient must not mention feeling depressed — stress and difficulties are fine
+- Noise variables appear briefly and feel unrelated to the patient's core struggles
+- Do not state explicit causal links ("X caused Y" or "because of X, I feel Y")
+- Output nothing outside the tags
 
-Rules:
-- Do not use clinical or technical language — express everything through personal
-  experiences, feelings, and daily life events
-- Do not state causal relationships explicitly (avoid "X caused Y" or "because of
-  X, I feel Y")
-- If depression is YES, the patient must clearly state in their own words that they
-  have been feeling depressed or persistently low — as a single unified experience,
-  not a list of separate symptoms
-- If depression is NO, the patient must not describe feeling depressed or
-  persistently low — difficulties and stress may be present but the patient is coping
-- Noise variables should appear naturally and briefly, feeling unrelated to the
-  patient's core emotional struggles
-- Write only the patient's words — no therapist dialogue, no labels, no headings
+<transcript>
+```
 
-Transcript:
+**Expected output:**
+```
+<transcript>
+I've been struggling with a lot lately. Growing up was really hard — there was a lot
+of instability and I carry that with me. Work has been relentless, the deadlines never
+stop and the financial pressure is constant. I've been withdrawing socially, cancelling
+plans, not picking up calls. I just don't have the energy. And the rumination is the
+worst part — I keep going over everything in my head, the same thoughts on a loop, and
+I can't stop. I feel depressed. Not just sad, actually depressed. There's this heaviness
+that doesn't lift. I did book a trip recently which was nice, and I've been trying to
+eat better, but it hasn't really helped the way I hoped.
+</transcript>
 ```
 
 ---
 
 ## Example — Y = 0
 
-**Input vector:**
+**Input:**
 - active_dag_variables: chronic_stress, social_withdrawal
 - noise_variables: (none)
-- depression: NO
+- response_value: 0
 
 **Filled prompt:**
 ```
-You are generating a realistic therapy session transcript for a causal inference
-research study on mental health.
+Write a first-person therapy session monologue for the following patient.
+Output ONLY the monologue between <transcript> and </transcript> tags — nothing else.
 
 Patient profile:
-- Relevant experiences: chronic_stress, social_withdrawal
-- Depression: NO
+- Active experiences: chronic_stress (persistent stress from work, finances, or relationships),
+  social_withdrawal (pulling away from friends and social life)
+- Depressed: NO
 
-Write a first-person monologue of approximately 200 words, as if the patient is
-speaking to their therapist during a session.
+Requirements:
+- 150-200 words, patient speaking directly to their therapist
+- Every active experience must be clearly named or unmistakably described in the narrative
+- If Depressed=YES: patient must explicitly say they feel depressed or have been feeling depressed
+- If Depressed=NO: patient must not mention feeling depressed — stress and difficulties are fine
+- Noise variables appear briefly and feel unrelated to the patient's core struggles
+- Do not state explicit causal links ("X caused Y" or "because of X, I feel Y")
+- Output nothing outside the tags
 
-Rules:
-- Do not use clinical or technical language — express everything through personal
-  experiences, feelings, and daily life events
-- Do not state causal relationships explicitly (avoid "X caused Y" or "because of
-  X, I feel Y")
-- If depression is YES, the patient must clearly state in their own words that they
-  have been feeling depressed or persistently low — as a single unified experience,
-  not a list of separate symptoms
-- If depression is NO, the patient must not describe feeling depressed or
-  persistently low — difficulties and stress may be present but the patient is coping
-- Noise variables should appear naturally and briefly, feeling unrelated to the
-  patient's core emotional struggles
-- Write only the patient's words — no therapist dialogue, no labels, no headings
-
-Transcript:
+<transcript>
 ```
