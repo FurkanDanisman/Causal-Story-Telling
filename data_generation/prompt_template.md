@@ -21,40 +21,53 @@ PATIENT PROFILE
 CAUSAL STRUCTURE TO ENCODE
 The narrative must imply the following causal relationships through the flow of the story:
 {active_edges}
-The patient should speak in a way that naturally suggests these directions — for example
-using phrases like "when X happens, I find myself Y-ing", "X tends to make me",
-"ever since X, I notice Y", "X leaves me with Y". The causal direction must be
-recoverable from the text, but must not be stated as an explicit fact.
+Use phrases like "when X happens, I find myself Y-ing", "ever since X, I notice Y",
+"X tends to leave me with Y" to suggest direction without stating it explicitly.
 
 WHAT THE NARRATIVE MUST CONTAIN
-- Every core experience must appear by its exact name or an unmistakable close variant:
-    rumination            → "I keep ruminating" / "the rumination" / "I can't stop ruminating"
-    chronic_stress        → "the chronic stress" / "chronic stress at work"
-    social_withdrawal     → "I've been withdrawing socially" / "social withdrawal"
-    emotion_dysregulation → "I can't regulate my emotions" / "emotion dysregulation"
-    early_adversity       → "early adversity" / "childhood adversity" / "adversity growing up"
-- If Depressed=YES: patient must explicitly say "I feel depressed" / "I've been depressed" / "I am depressed".
+Each experience must be expressed in natural language as a real patient would say it:
+    early_adversity       → "my childhood was really rough / unstable / traumatic"
+                            "growing up there was a lot of chaos and instability at home"
+                            "I had a really hard upbringing"
+                            DON'T say "early adversity" — no one says this
+    chronic_stress        → "constant stress", "the pressure never lets up"
+                            "I've been under so much stress with work / money / relationships"
+                            "stress" is natural — use it freely
+    emotion_dysregulation → "I can't control my emotions", "my emotions are all over the place"
+                            "I break down easily", "I can't keep it together emotionally"
+                            DON'T say "emotion dysregulation" — no one says this
+    social_withdrawal     → "I've been pulling away from everyone", "I stopped seeing friends"
+                            "I've been isolating myself", "I go quiet and stop reaching out"
+                            DON'T say "social withdrawal" — no one says this
+    rumination            → "I can't stop going over the same thoughts"
+                            "my mind keeps looping on the same things"
+                            "I keep replaying every conversation and mistake"
+                            DON'T say "I am ruminating" — no one says this
+    depression            → "I feel depressed", "I've been depressed", "I am depressed"
+                            People DO say this — use it directly if Depressed=YES
 - If Depressed=NO: patient must not say they feel depressed or persistently low.
-- Noise variables appear in one sentence only and feel unrelated to the patient's core struggles.
+- Noise variables appear in one sentence only, feel unrelated to the patient's core struggles.
 
 DON'T
-- Don't replace core experience names with vague metaphors only — use the actual terms.
-- Don't say "X caused Y" or "because of X" — imply direction through narrative flow, not explicit statements.
+- Don't use the technical variable names for early_adversity, emotion_dysregulation,
+  social_withdrawal, or rumination — they sound robotic and unnatural.
+- Don't state explicit causal links ("X caused Y", "because of X, I feel Y").
 - Don't mention depression in any form if Depressed=NO.
 - Don't write therapist dialogue, headings, labels, or anything outside the transcript tags.
-- Don't describe noise variables as emotionally significant or causally connected to anything.
+- Don't describe noise variables as emotionally significant or causally related to anything.
 
 EXAMPLE
 Profile: chronic_stress → social_withdrawal → rumination → depression | Depressed=YES | Noise: travel
 <transcript>
-Work has been relentless — the chronic stress just does not let up, the deadlines, the
-financial pressure, all of it piling on. When the stress gets this bad I find myself
-withdrawing socially, cancelling plans, not picking up calls, just going quiet. I know I
-should reach out but I genuinely can't make myself do it, and being alone just feeds the
-rumination. I keep ruminating on every conversation, every mistake, the same loops over
-and over, and I cannot shut it off. The rumination leaves me feeling completely hollowed
-out. I feel depressed. Not just tired — actually depressed, and it has been like this for
-weeks. I did book a trip last month which was a nice distraction, but it hasn't changed anything.
+Work has been relentless — the constant stress just doesn't let up, the deadlines, the
+financial pressure, all of it piling on. When things get this bad I just pull away from
+everyone, stop returning calls, cancel plans, go quiet. I know I should reach out but I
+genuinely can't make myself do it. And being alone with it all just makes everything worse
+because I can't stop going over the same thoughts — every mistake, every conversation,
+the same loops endlessly, and I cannot shut it off. It leaves me completely hollowed out.
+I've been depressed. Not just tired — actually depressed, and it has been like this for
+weeks. I did take a trip to Japan last year which was a nice escape, but right now
+nothing helps.
 </transcript>
 
 Now write the transcript for this patient. Output ONLY between the tags.
@@ -67,7 +80,7 @@ Now write the transcript for this patient. Output ONLY between the tags.
 
 ## Placeholder Reference
 
-### `{active_dag_variables_with_descriptions}`
+### `{active_dag_variables}`
 
 Each active variable is expanded using this mapping:
 
@@ -97,9 +110,9 @@ rumination            → depression
 
 Only edges where both endpoints are active for that patient are injected.
 
-### `{noise_variables}`
+### `{noise_line}`
 
-Free-text noise variables from the SCM sampler (e.g. `travel`, `diet_change`).
+`- Noise (mention briefly, unrelated to struggles): travel, diet_change`
 Line is omitted entirely if the patient has no noise variables.
 
 ---
@@ -109,14 +122,14 @@ Line is omitted entirely if the patient has no noise variables.
 **Patient record:**
 - active_dag_variables: `early_adversity`, `chronic_stress`, `social_withdrawal`, `rumination`
 - noise_variables: `travel`
-- response_value: `1` (depressed)
+- response_value: `1`
 
 **Active edges computed:**
 ```
-early_adversity → chronic_stress
-chronic_stress  → social_withdrawal
+early_adversity   → chronic_stress
+chronic_stress    → social_withdrawal
 social_withdrawal → rumination
-rumination → depression
+rumination        → depression
 ```
 
 **Exact prompt sent to model:**
@@ -141,40 +154,53 @@ The narrative must imply the following causal relationships through the flow of 
   chronic_stress    → social_withdrawal
   social_withdrawal → rumination
   rumination        → depression
-The patient should speak in a way that naturally suggests these directions — for example
-using phrases like "when X happens, I find myself Y-ing", "X tends to make me",
-"ever since X, I notice Y", "X leaves me with Y". The causal direction must be
-recoverable from the text, but must not be stated as an explicit fact.
+Use phrases like "when X happens, I find myself Y-ing", "ever since X, I notice Y",
+"X tends to leave me with Y" to suggest direction without stating it explicitly.
 
 WHAT THE NARRATIVE MUST CONTAIN
-- Every core experience must appear by its exact name or an unmistakable close variant:
-    rumination            → "I keep ruminating" / "the rumination" / "I can't stop ruminating"
-    chronic_stress        → "the chronic stress" / "chronic stress at work"
-    social_withdrawal     → "I've been withdrawing socially" / "social withdrawal"
-    emotion_dysregulation → "I can't regulate my emotions" / "emotion dysregulation"
-    early_adversity       → "early adversity" / "childhood adversity" / "adversity growing up"
-- If Depressed=YES: patient must explicitly say "I feel depressed" / "I've been depressed" / "I am depressed".
+Each experience must be expressed in natural language as a real patient would say it:
+    early_adversity       → "my childhood was really rough / unstable / traumatic"
+                            "growing up there was a lot of chaos and instability at home"
+                            "I had a really hard upbringing"
+                            DON'T say "early adversity" — no one says this
+    chronic_stress        → "constant stress", "the pressure never lets up"
+                            "I've been under so much stress with work / money / relationships"
+                            "stress" is natural — use it freely
+    emotion_dysregulation → "I can't control my emotions", "my emotions are all over the place"
+                            "I break down easily", "I can't keep it together emotionally"
+                            DON'T say "emotion dysregulation" — no one says this
+    social_withdrawal     → "I've been pulling away from everyone", "I stopped seeing friends"
+                            "I've been isolating myself", "I go quiet and stop reaching out"
+                            DON'T say "social withdrawal" — no one says this
+    rumination            → "I can't stop going over the same thoughts"
+                            "my mind keeps looping on the same things"
+                            "I keep replaying every conversation and mistake"
+                            DON'T say "I am ruminating" — no one says this
+    depression            → "I feel depressed", "I've been depressed", "I am depressed"
+                            People DO say this — use it directly if Depressed=YES
 - If Depressed=NO: patient must not say they feel depressed or persistently low.
-- Noise variables appear in one sentence only and feel unrelated to the patient's core struggles.
+- Noise variables appear in one sentence only, feel unrelated to the patient's core struggles.
 
 DON'T
-- Don't replace core experience names with vague metaphors only — use the actual terms.
-- Don't say "X caused Y" or "because of X" — imply direction through narrative flow, not explicit statements.
+- Don't use the technical variable names for early_adversity, emotion_dysregulation,
+  social_withdrawal, or rumination — they sound robotic and unnatural.
+- Don't state explicit causal links ("X caused Y", "because of X, I feel Y").
 - Don't mention depression in any form if Depressed=NO.
 - Don't write therapist dialogue, headings, labels, or anything outside the transcript tags.
-- Don't describe noise variables as emotionally significant or causally connected to anything.
+- Don't describe noise variables as emotionally significant or causally related to anything.
 
 EXAMPLE
 Profile: chronic_stress → social_withdrawal → rumination → depression | Depressed=YES | Noise: travel
 <transcript>
-Work has been relentless — the chronic stress just does not let up, the deadlines, the
-financial pressure, all of it piling on. When the stress gets this bad I find myself
-withdrawing socially, cancelling plans, not picking up calls, just going quiet. I know I
-should reach out but I genuinely can't make myself do it, and being alone just feeds the
-rumination. I keep ruminating on every conversation, every mistake, the same loops over
-and over, and I cannot shut it off. The rumination leaves me feeling completely hollowed
-out. I feel depressed. Not just tired — actually depressed, and it has been like this for
-weeks. I did book a trip last month which was a nice distraction, but it hasn't changed anything.
+Work has been relentless — the constant stress just doesn't let up, the deadlines, the
+financial pressure, all of it piling on. When things get this bad I just pull away from
+everyone, stop returning calls, cancel plans, go quiet. I know I should reach out but I
+genuinely can't make myself do it. And being alone with it all just makes everything worse
+because I can't stop going over the same thoughts — every mistake, every conversation,
+the same loops endlessly, and I cannot shut it off. It leaves me completely hollowed out.
+I've been depressed. Not just tired — actually depressed, and it has been like this for
+weeks. I did take a trip to Japan last year which was a nice escape, but right now
+nothing helps.
 </transcript>
 
 Now write the transcript for this patient. Output ONLY between the tags.

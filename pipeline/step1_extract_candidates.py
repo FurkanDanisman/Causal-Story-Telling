@@ -11,19 +11,27 @@ from pathlib import Path
 from typing import List
 
 
-EXTRACTION_PROMPT_TEMPLATE = """You are extracting candidate variables from a narrative for causal analysis.
+EXTRACTION_PROMPT_TEMPLATE = """You are extracting candidate causal variables from a therapy session narrative.
 
-Definition:
-A candidate variable is any text-grounded concept that describes a state, event, behavior, condition, attribute, or action that could vary across units, people, or contexts.
+A candidate variable is a psychological state, behavioral pattern, life stressor, or \
+emotional experience that:
+- Is clearly present in the document
+- Represents an ongoing pattern or condition, not a one-time event
+- Could plausibly cause or be caused by other aspects of the patient's mental health
 
-Rule:
-Extract a text-grounded concept c as a candidate variable if there exists at least one plausible comparison case in which c is absent, different in kind, or different in intensity.
+Focus on constructs such as: childhood experiences, life stressors, emotional states, \
+behavioral tendencies, cognitive patterns, mood states.
 
-Task:
-From the document below, return all candidate variables that satisfy the definition and rule.
-Use short snake_case names.
-Only include variables grounded in the document.
-Output only a JSON array of strings.
+GOOD extractions (construct-level): childhood_adversity, work_stress, social_isolation, \
+repetitive_negative_thoughts, emotional_instability, depression, constant_pressure
+BAD extractions (too specific or incidental): trip_to_japan, diet_change, photography, \
+apartment_move, book_club — these are one-time events or noise, not causal constructs
+
+Rules:
+- Extract 4-8 variables only — the core causal constructs, not every detail mentioned
+- Use short snake_case names that capture the concept, not the specific wording
+- Only include variables clearly grounded in the document
+- Output only a JSON array of strings, nothing else
 
 Document:
 {document}
