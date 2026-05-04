@@ -45,25 +45,82 @@ VAR_DESCRIPTIONS = {
     "rumination":            "rumination (repetitively dwelling on the same negative thoughts)",
 }
 
-PROMPT_TEMPLATE = """\
-Write a first-person therapy session monologue for the following patient. \
-Output ONLY the monologue between <transcript> and </transcript> tags — nothing else.
+# All directed edges in the ground truth DAG
+GROUND_TRUTH_EDGES = [
+    ("early_adversity",       "chronic_stress"),
+    ("early_adversity",       "emotion_dysregulation"),
+    ("early_adversity",       "depression"),
+    ("chronic_stress",        "emotion_dysregulation"),
+    ("chronic_stress",        "social_withdrawal"),
+    ("emotion_dysregulation", "rumination"),
+    ("social_withdrawal",     "rumination"),
+    ("rumination",            "depression"),
+]
 
-Patient profile:
-- Active experiences: {active_dag_variables}
-- Depressed: {depression_label}
-{noise_line}
-Requirements:
-- 150-200 words, patient speaking directly to their therapist
-- Every active experience must be clearly named or unmistakably described in the narrative \
-(e.g. "rumination" → the patient says "I keep ruminating" or "I can't stop ruminating")
-- If Depressed=YES: patient must explicitly say they feel depressed or have been feeling depressed
-- If Depressed=NO: patient must not mention feeling depressed — stress and difficulties are fine
-- Noise variables appear briefly and feel unrelated to the patient's core struggles
-- Do not state explicit causal links ("X caused Y" or "because of X, I feel Y")
-- Output nothing outside the tags
+PROMPT_TEMPLATE = """\
+You are writing synthetic therapy session transcripts for a causal inference research study.
+
+TASK
+Write a first-person monologue (150-200 words) as a patient speaking to their therapist.
+
+PATIENT PROFILE
+- Core experiences: {active_dag_variables}
+{noise_line}- Depressed: {depression_label}
+
+CAUSAL STRUCTURE TO ENCODE
+The narrative must imply the following causal relationships through the flow of the story:
+{active_edges}
+The patient should speak in a way that naturally suggests these directions — for example \
+using phrases like "when X happens, I find myself Y-ing", "X tends to make me", \
+"ever since X, I notice Y", "X leaves me with Y". The causal direction must be \
+recoverable from the text, but must not be stated as an explicit fact.
+
+WHAT THE NARRATIVE MUST CONTAIN
+- Every core experience must appear by its exact name or an unmistakable close variant:
+    rumination            → "I keep ruminating" / "the rumination" / "I can't stop ruminating"
+    chronic_stress        → "the chronic stress" / "chronic stress at work"
+    social_withdrawal     → "I've been withdrawing socially" / "social withdrawal"
+    emotion_dysregulation → "I can't regulate my emotions" / "emotion dysregulation"
+    early_adversity       → "early adversity" / "childhood adversity" / "adversity growing up"
+- If Depressed=YES: patient must explicitly say "I feel depressed" / "I've been depressed" / "I am depressed".
+- If Depressed=NO: patient must not say they feel depressed or persistently low.
+- Noise variables appear in one sentence only and feel unrelated to the patient's core struggles.
+
+DON'T
+- Don't replace core experience names with vague metaphors only — use the actual terms.
+- Don't say "X caused Y" or "because of X" — imply direction through narrative flow, not explicit statements.
+- Don't mention depression in any form if Depressed=NO.
+- Don't write therapist dialogue, headings, labels, or anything outside the transcript tags.
+- Don't describe noise variables as emotionally significant or causally connected to anything.
+
+EXAMPLE
+Profile: chronic_stress → social_withdrawal → rumination → depression | Depressed=YES | Noise: travel
+<transcript>
+Work has been relentless — the chronic stress just does not let up, the deadlines, the \
+financial pressure, all of it piling on. When the stress gets this bad I find myself \
+withdrawing socially, cancelling plans, not picking up calls, just going quiet. I know I \
+should reach out but I genuinely can't make myself do it, and being alone just feeds the \
+rumination. I keep ruminating on every conversation, every mistake, the same loops over \
+and over, and I cannot shut it off. The rumination leaves me feeling completely hollowed \
+out. I feel depressed. Not just tired — actually depressed, and it has been like this for \
+weeks. I did book a trip last month which was a nice distraction, but it hasn't changed anything.
+</transcript>
+
+Now write the transcript for this patient. Output ONLY between the tags.
 
 <transcript>"""
+
+
+def _active_edges(active_vars: list, y: int) -> str:
+    """Return the subset of ground truth edges where both endpoints are active."""
+    active_set = set(active_vars)
+    if y == 1:
+        active_set.add("depression")
+    lines = []
+    for src, tgt in GROUND_TRUTH_EDGES:
+        if src in active_set and tgt in active_set:
+            lines.append(f"  {src} → {tgt}")
+    return "\n".join(lines) if lines else "  (none — variables are independent)"
 
 
 def build_prompt(record: dict) -> str:
@@ -76,13 +133,14 @@ def build_prompt(record: dict) -> str:
     ) if active else "none"
 
     noise_line = (
-        f"- Also mentions: {', '.join(noise)}\n" if noise else ""
+        f"- Noise (mention briefly, unrelated to struggles): {', '.join(noise)}\n" if noise else ""
     )
 
     return PROMPT_TEMPLATE.format(
         active_dag_variables=active_desc,
         depression_label="YES" if y == 1 else "NO",
         noise_line=noise_line,
+        active_edges=_active_edges(active, y),
     )
 
 
