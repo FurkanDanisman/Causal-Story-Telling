@@ -14,23 +14,30 @@ from typing import List
 EXTRACTION_PROMPT_TEMPLATE = """You are extracting candidate causal variables from a therapy session narrative.
 
 A candidate variable is a psychological state, behavioral pattern, life stressor, or \
-emotional experience that:
-- Is clearly present in the document
-- Represents an ongoing pattern or condition, not a one-time event
-- Could plausibly cause or be caused by other aspects of the patient's mental health
+emotional experience that is clearly and unambiguously present in the document as a \
+distinct, identifiable concept — not a vague feeling or a one-time event.
 
-Focus on constructs such as: childhood experiences, life stressors, emotional states, \
-behavioral tendencies, cognitive patterns, mood states.
+The name you assign must be a precise proxy for the concept the patient is describing:
+- "my childhood was really unstable and traumatic"  → childhood_adversity
+- "I've been under constant stress, the pressure never lets up"  → chronic_stress
+- "I can't control my emotions, I break down easily"  → emotional_dysregulation
+- "I've been pulling away from everyone and isolating myself"  → social_isolation
+- "I can't stop going over the same thoughts again and again"  → repetitive_negative_thoughts
+- "I feel depressed"  → depression
 
-GOOD extractions (construct-level): childhood_adversity, work_stress, social_isolation, \
-repetitive_negative_thoughts, emotional_instability, depression, constant_pressure
-BAD extractions (too specific or incidental): trip_to_japan, diet_change, photography, \
-apartment_move, book_club — these are one-time events or noise, not causal constructs
+Only extract a variable if the document contains a clear, dedicated expression of that \
+concept — not a passing mention or loose implication.
+
+GOOD extractions: childhood_adversity, chronic_stress, social_isolation, \
+repetitive_negative_thoughts, emotional_dysregulation, depression
+BAD extractions: trip_to_japan, diet_change, photography, apartment_move \
+— these are one-time events or incidental details, not causal constructs
 
 Rules:
-- Extract 4-8 variables only — the core causal constructs, not every detail mentioned
-- Use short snake_case names that capture the concept, not the specific wording
-- Only include variables clearly grounded in the document
+- Extract 4-8 variables — only the core concepts, not every detail
+- Each extracted name must be a specific, unambiguous proxy for what the patient said
+- Do not extract vague or generic terms (e.g. "stress" alone is too vague — use "chronic_stress")
+- Only include variables clearly and explicitly grounded in the document
 - Output only a JSON array of strings, nothing else
 
 Document:
