@@ -7,6 +7,7 @@ Placeholders in `{curly braces}` are filled per patient — a fully filled examp
 
 ## Prompt
 
+<!-- TEMPLATE_START -->
 ```
 You are writing synthetic therapy session transcripts for a causal inference research study.
 
@@ -14,9 +15,8 @@ TASK
 Write a first-person monologue (150-200 words) as a patient speaking to their therapist.
 
 PATIENT PROFILE
-- Core experiences: {active_dag_variables_with_descriptions}
-- Noise (mention briefly, unrelated to struggles): {noise_variables}
-- Depressed: {YES or NO}
+- Core experiences: {active_dag_variables}
+{noise_line}- Depressed: {depression_label}
 
 CAUSAL STRUCTURE TO ENCODE
 The narrative must imply the following causal relationships through the flow of the story:
@@ -61,6 +61,7 @@ Now write the transcript for this patient. Output ONLY between the tags.
 
 <transcript>
 ```
+<!-- TEMPLATE_END -->
 
 ---
 
