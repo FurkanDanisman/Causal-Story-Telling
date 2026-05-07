@@ -136,20 +136,30 @@ def main() -> None:
     rng = random.Random(args.seed)
     records = []
 
-    for i in range(args.n_documents):
+    i = 0
+    attempts = 0
+    while len(records) < args.n_documents:
+        attempts += 1
         state = sample_person(rng)
         noise = sample_noise(rng, args.max_noise)
 
-        # Active DAG variables are those sampled as 1, excluding the response.
         active = [v for v in SAMPLING_ORDER if v != RESPONSE_VARIABLE and state[v] == 1]
 
+        # Skip samples with no active DAG variables — narratives would be empty
+        if not active:
+            continue
+
         records.append({
-            "doc_id":              f"doc_{i:04d}",
-            "binary_vector":       {v: state[v] for v in SAMPLING_ORDER},
+            "doc_id":               f"doc_{i:04d}",
+            "binary_vector":        {v: state[v] for v in SAMPLING_ORDER},
             "active_dag_variables": active,
-            "noise_variables":     noise,
-            "response_value":      state[RESPONSE_VARIABLE],
+            "noise_variables":      noise,
+            "response_value":       state[RESPONSE_VARIABLE],
         })
+        i += 1
+
+    print(f"Sampled {args.n_documents} documents ({attempts} attempts, "
+          f"{attempts - args.n_documents} empty-active rejected)")
 
     # ── Summary statistics ─────────────────────────────────────────────────────
     n = args.n_documents

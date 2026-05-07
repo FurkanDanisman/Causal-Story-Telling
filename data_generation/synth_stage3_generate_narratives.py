@@ -55,6 +55,14 @@ def _load_template(md_path: Path = PROMPT_TEMPLATE_MD) -> str:
 
 # ── Prompt construction ────────────────────────────────────────────────────────
 
+NOISE_DESCRIPTIONS = {
+    "diet_change":      "diet_change (e.g. 'I've been trying to eat better lately')",
+    "housing_change":   "housing_change (e.g. 'I moved to a new place recently')",
+    "work_promotion":   "work_promotion (e.g. 'I got a promotion at work')",
+    "new_hobby":        "new_hobby (e.g. 'I started a new hobby')",
+    "travel":           "travel (e.g. 'I took a trip recently')",
+}
+
 VAR_DESCRIPTIONS = {
     "early_adversity":       "early_adversity (difficult or traumatic childhood experiences)",
     "chronic_stress":        "chronic_stress (persistent stress from work, finances, or relationships)",
@@ -100,7 +108,9 @@ VAR_PROXIES = {
     ),
     "depression": (
         '    depression            → "I feel depressed" / "I\'ve been depressed" / "I am depressed"\n'
-        '                            Use directly and explicitly if Depressed=YES.\n'
+        '                            Use one of these exactly. State it plainly — do not elaborate,\n'
+        '                            qualify, or follow it with metaphors like "like I\'m stuck" or\n'
+        '                            "like I\'m in a fog". Just say it and move on.\n'
         '                            DON\'T say "depressed" in any form if Depressed=NO.'
     ),
 }
@@ -141,8 +151,9 @@ def build_prompt(record: dict) -> str:
         VAR_DESCRIPTIONS.get(v, v) for v in active
     ) if active else "none"
 
+    noise_desc = ", ".join(NOISE_DESCRIPTIONS.get(v, v) for v in noise)
     noise_line = (
-        f"- Noise (mention briefly, unrelated to struggles): {', '.join(noise)}\n" if noise else ""
+        f"- Noise (mention briefly, unrelated to struggles): {noise_desc}\n" if noise else ""
     )
 
     proxy_vars = list(active) + (["depression"] if y == 1 else [])
@@ -150,10 +161,19 @@ def build_prompt(record: dict) -> str:
         VAR_PROXIES[v] for v in proxy_vars if v in VAR_PROXIES
     )
 
+    all_dag_vars = list(VAR_DESCRIPTIONS.keys())
+    inactive = [v for v in all_dag_vars if v not in active]
+    inactive_line = (
+        "- Absent variables — do NOT mention these in any form: "
+        + ", ".join(inactive)
+        + "\n"
+    ) if inactive else ""
+
     return PROMPT_TEMPLATE.format(
         active_dag_variables=active_desc,
         depression_label="YES" if y == 1 else "NO",
         noise_line=noise_line,
+        inactive_line=inactive_line,
         active_edges=_active_edges(active, y),
         active_proxies=active_proxies,
     )
@@ -161,15 +181,36 @@ def build_prompt(record: dict) -> str:
 
 # ── Transcript extraction ─────────────────────────────────────────────────────
 
+_BLEED_PATTERNS = [
+    "\n```",
+    "\nplease provide",
+    "\nhere is",
+    "\n## step",
+    "\n## ",
+    "\nnote:",
+    "\ni have",
+    "\nthe patient",
+    "\nthis narrative",
+    "\nthis response",
+]
+
 def _extract_transcript(raw: str) -> str:
-    """Pull content between <transcript> and </transcript>. If closing tag is
-    missing (model stopped early), return everything after the opening tag."""
+    """Pull content between <transcript> and </transcript>.
+    If closing tag is missing, cut at the first bleed pattern."""
     start = raw.find("<transcript>")
     if start != -1:
         raw = raw[start + len("<transcript>"):]
     end = raw.find("</transcript>")
     if end != -1:
         raw = raw[:end]
+    else:
+        cutoff = len(raw)
+        lower = raw.lower()
+        for pattern in _BLEED_PATTERNS:
+            idx = lower.find(pattern)
+            if idx != -1:
+                cutoff = min(cutoff, idx)
+        raw = raw[:cutoff]
     return raw.strip()
 
 

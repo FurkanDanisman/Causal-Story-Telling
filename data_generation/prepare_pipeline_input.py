@@ -57,7 +57,7 @@ def is_clean(text: str, min_chars: int = 200) -> bool:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--narratives-jsonl", required=True, type=Path,
-                        help="Path to reliable_narratives.jsonl (output of audit_and_filter_narratives.py)")
+                        help="Path to narratives.jsonl (output of synth_stage3_generate_narratives.py)")
     parser.add_argument("--output-csv",       required=True, type=Path)
     parser.add_argument("--n-sample",         type=int, default=250)
     parser.add_argument("--seed",             type=int, default=42)

@@ -1,30 +1,23 @@
 #!/bin/bash
-#SBATCH --job-name=causal_narratives
-#SBATCH --partition=gpubase_h100_b1   # H100 80GB x2 = 160GB VRAM, fits 70B in float16
-#SBATCH --gres=gpu:2                  # 2 H100s required for Llama-3.3-70B (~140GB VRAM)
-#SBATCH --mem=64G
-#SBATCH --cpus-per-task=8
-#SBATCH --time=02:00:00
+#SBATCH --job-name=causal_sample
+#SBATCH --partition=default
+#SBATCH --mem=8G
+#SBATCH --cpus-per-task=4
+#SBATCH --time=00:10:00
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
 
 set -e
 
-# ── Paths ──────────────────────────────────────────────────────────────────────
 PROJECT_DIR=~/projects/aip-rgrosse/furkanbd/causal-stories
-MODEL=/model-weights/Llama-3.3-70B-Instruct
 
-# ── Environment ────────────────────────────────────────────────────────────────
 source $PROJECT_DIR/../.venv/bin/activate
+mkdir -p $PROJECT_DIR/logs $PROJECT_DIR/out
 
-# ── Run ────────────────────────────────────────────────────────────────────────
-mkdir -p $PROJECT_DIR/logs
-mkdir -p $PROJECT_DIR/out
+echo "=== Stage 1+2: Sample SCM ==="
+python3 $PROJECT_DIR/data_generation/synth_stage1_2_sample.py \
+    --n-documents   1000 \
+    --seed          42 \
+    --output-json   $PROJECT_DIR/out/samples.json
 
-python3 "$PROJECT_DIR/Data generation/synth_stage3_generate_narratives.py" \
-    --samples-json  "$PROJECT_DIR/out/samples.json" \
-    --output-jsonl  "$PROJECT_DIR/out/narratives.jsonl" \
-    --hf-model      $MODEL \
-    --max-new-tokens 350 \
-    --temperature   0.7 \
-    --checkpoint-every 10
+echo "=== Done. Submit run_narratives_array.sh next ==="
