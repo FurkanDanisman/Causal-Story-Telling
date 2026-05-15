@@ -17,3 +17,6 @@ venv/
 
 # Claude internal
 .claude/
+
+# Secrets
+.env

@@ -1,0 +1,11 @@
+doc_id,early_adversity_gt,early_adversity_llm,early_adversity_kb,social_withdrawal_gt,social_withdrawal_llm,social_withdrawal_kb,rumination_gt,rumination_llm,rumination_kb
+doc_0654,1,1,1,0,0,0,0,0,1
+doc_0114,1,0,1,0,0,0,0,0,1
+doc_0025,0,0,0,1,1,1,1,1,1
+doc_0759,1,1,1,0,0,0,0,0,1
+doc_0281,1,1,1,0,0,0,0,0,1
+doc_0250,1,1,1,1,1,1,1,1,1
+doc_0228,0,0,0,0,0,0,0,0,1
+doc_0142,1,1,1,1,1,1,0,0,1
+doc_0754,0,0,0,0,0,0,1,0,1
+doc_0104,1,1,1,1,1,1,0,0,1
